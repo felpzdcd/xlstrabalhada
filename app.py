@@ -3,30 +3,42 @@ import pandas as pd
 import io
 
 def filtrar_pagamentos_numericos_e_termos(arquivo_excel, termos_excluir):
-    """
-    Filtra um arquivo Excel mantendo apenas as linhas onde a primeira célula é numérica
-    e exclui linhas com termos específicos na primeira coluna.
-    Adiciona um zero à esquerda em CPF/CNPJ com 10 caracteres.
-    """
     try:
-        # Lendo todas as colunas como string para evitar remoção de zeros
+        # Carregar o arquivo forçando todas as colunas como string
         df = pd.read_excel(arquivo_excel, dtype=str)
+        
+        # Debug: Exibir primeiras linhas para ver a estrutura
+        st.write("🔍 Pré-processamento (5 primeiras linhas):")
+        st.dataframe(df.head())
 
-        # Garantir que todas as células sejam tratadas como string
-        df = df.astype(str).apply(lambda x: x.str.strip())
+        # Remover espaços extras no nome das colunas
+        df.columns = df.columns.str.strip()
 
-        # Filtrar as linhas que não contêm os termos a serem excluídos
+        # Filtrar linhas onde a primeira célula contém os termos a excluir
         mascara_termos = ~df.iloc[:, 0].str.contains('|'.join(termos_excluir), case=False, na=False)
         df_sem_termos = df[mascara_termos]
 
-        # Filtra as linhas onde a primeira célula é numérica
+        # Filtrar onde a primeira célula é numérica
         df_filtrado = df_sem_termos[pd.to_numeric(df_sem_termos.iloc[:, 0], errors='coerce').notna()]
 
-        # Garante que a coluna 'CPF/CNPJ' seja tratada corretamente
-        if 'CPF/CNPJ' in df_filtrado.columns:
-            df_filtrado['CPF/CNPJ'] = df_filtrado['CPF/CNPJ'].apply(
+        # Verificar se a coluna CPF/CNPJ existe
+        colunas_disponiveis = df_filtrado.columns.tolist()
+        st.write("📌 Colunas detectadas:", colunas_disponiveis)
+
+        # Tentando encontrar a coluna CPF/CNPJ mesmo se o nome estiver diferente
+        possiveis_nomes = ["CPF/CNPJ", "CPF", "CNPJ", "cpf/cnpj", "Cpf/Cnpj"]
+        nome_coluna = next((col for col in possiveis_nomes if col in df_filtrado.columns), None)
+
+        if nome_coluna:
+            st.write(f"✅ Coluna '{nome_coluna}' encontrada!")
+            df_filtrado[nome_coluna] = df_filtrado[nome_coluna].astype(str).str.strip()
+
+            # Adicionar zero à esquerda para CPF/CNPJ com 10 caracteres
+            df_filtrado[nome_coluna] = df_filtrado[nome_coluna].apply(
                 lambda x: '0' + x if x.isdigit() and len(x) == 10 else x
             )
+        else:
+            st.error("🚨 Coluna 'CPF/CNPJ' não encontrada! Verifique se o nome está correto.")
 
         return df_filtrado
 
@@ -37,7 +49,6 @@ def filtrar_pagamentos_numericos_e_termos(arquivo_excel, termos_excluir):
 def main():
     st.title("Filtragem de Pagamentos")
 
-    # Restrição de acesso
     usuario = st.text_input("Usuário")
     senha = st.text_input("Senha", type="password")
 
@@ -58,16 +69,16 @@ def main():
             df_filtrado = filtrar_pagamentos_numericos_e_termos(arquivo_excel, termos_excluir)
 
             if df_filtrado is not None:
-                st.write("DataFrame filtrado:")
-                st.dataframe(df_filtrado.astype(str))  # Garantindo exibição correta
+                st.write("📄 DataFrame filtrado:")
+                st.dataframe(df_filtrado.astype(str))
 
-                # Opção para baixar o arquivo filtrado
                 output = io.BytesIO()
                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                     df_filtrado.to_excel(writer, index=False)
                 output.seek(0)
+
                 st.download_button(
-                    label="Baixar arquivo filtrado",
+                    label="📥 Baixar arquivo filtrado",
                     data=output,
                     file_name="pagamentos_filtrados.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
