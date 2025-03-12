@@ -27,7 +27,7 @@ def filtrar_pagamentos_numericos_e_termos(arquivo_excel, termos_excluir):
             df_filtrado['CPF/CNPJ'] = df_filtrado['CPF/CNPJ'].astype(str)
 
             # Adiciona um zero à esquerda em CPF/CNPJ com 10 caracteres
-            df_filtrado['CPF/CNPJ'] = df_filtrado['CPF/CNPJ'].apply(lambda x: '0' + x if len(x) == 10 else x)
+            df_filtrado['CPF/CNPJ'] = df_filtrado['CPF/CNPJ'].apply(lambda x: x.zfill(11) if len(x) == 10 else x)
 
         return df_filtrado
 
