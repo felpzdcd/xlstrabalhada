@@ -4,12 +4,8 @@ import io
 
 def filtrar_pagamentos_numericos_e_termos(arquivo_excel, termos_excluir):
     try:
-        # Carregar o arquivo forçando todas as colunas como string
-        df = pd.read_excel(arquivo_excel, dtype=str)
-        
-        # Debug: Exibir primeiras linhas para ver a estrutura
-        st.write("🔍 Pré-processamento (5 primeiras linhas):")
-        st.dataframe(df.head())
+        # Carregar o arquivo Excel
+        df = pd.read_excel(arquivo_excel)
 
         # Remover espaços extras no nome das colunas
         df.columns = df.columns.str.strip()
@@ -22,15 +18,10 @@ def filtrar_pagamentos_numericos_e_termos(arquivo_excel, termos_excluir):
         df_filtrado = df_sem_termos[pd.to_numeric(df_sem_termos.iloc[:, 0], errors='coerce').notna()]
 
         # Verificar se a coluna CPF/CNPJ existe
-        colunas_disponiveis = df_filtrado.columns.tolist()
-        st.write("📌 Colunas detectadas:", colunas_disponiveis)
-
-        # Tentando encontrar a coluna CPF/CNPJ mesmo se o nome estiver diferente
         possiveis_nomes = ["CPF/CNPJ", "CPF", "CNPJ", "cpf/cnpj", "Cpf/Cnpj"]
         nome_coluna = next((col for col in possiveis_nomes if col in df_filtrado.columns), None)
 
         if nome_coluna:
-            st.write(f"✅ Coluna '{nome_coluna}' encontrada!")
             df_filtrado[nome_coluna] = df_filtrado[nome_coluna].astype(str).str.strip()
 
             # Adicionar zero à esquerda para CPF/CNPJ com 10 caracteres
@@ -38,7 +29,7 @@ def filtrar_pagamentos_numericos_e_termos(arquivo_excel, termos_excluir):
                 lambda x: '0' + x if x.isdigit() and len(x) == 10 else x
             )
         else:
-            st.error("🚨 Coluna 'CPF/CNPJ' não encontrada! Verifique se o nome está correto.")
+            st.error("Coluna 'CPF/CNPJ' não encontrada! Verifique se o nome está correto.")
 
         return df_filtrado
 
@@ -69,7 +60,7 @@ def main():
             df_filtrado = filtrar_pagamentos_numericos_e_termos(arquivo_excel, termos_excluir)
 
             if df_filtrado is not None:
-                st.write("📄 DataFrame filtrado:")
+                st.write("DataFrame filtrado:")
                 st.dataframe(df_filtrado.astype(str))
 
                 output = io.BytesIO()
@@ -78,7 +69,7 @@ def main():
                 output.seek(0)
 
                 st.download_button(
-                    label="📥 Baixar arquivo filtrado",
+                    label="Baixar arquivo filtrado",
                     data=output,
                     file_name="pagamentos_filtrados.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
