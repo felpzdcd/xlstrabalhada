@@ -73,7 +73,7 @@ def main():
                     file_name="pagamentos_filtrados.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
-    elif usuario and senha:
+    elif usuario e senha:
         st.error("Usuário ou senha incorretos.")
 
 if __name__ == "__main__":
