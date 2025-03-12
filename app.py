@@ -9,10 +9,13 @@ def filtrar_pagamentos_numericos_e_termos(arquivo_excel, termos_excluir):
     Adiciona um zero à esquerda em CPF/CNPJ com 10 caracteres.
     """
     try:
-        # Carrega a planilha Excel a partir do BytesIO
-        df = pd.read_excel(arquivo_excel)
+        # Carrega a planilha Excel
+        df = pd.read_excel(arquivo_excel, dtype=str)  # Garante que tudo seja string
 
-        # Converte a primeira coluna para string (para lidar com valores mistos)
+        # Remove espaços desnecessários em todas as células
+        df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+
+        # Converte a primeira coluna para string para evitar problemas
         df.iloc[:, 0] = df.iloc[:, 0].astype(str)
 
         # Filtra as linhas que não contêm os termos a serem excluídos
@@ -22,12 +25,14 @@ def filtrar_pagamentos_numericos_e_termos(arquivo_excel, termos_excluir):
         # Filtra as linhas onde a primeira célula é numérica
         df_filtrado = df_sem_termos[pd.to_numeric(df_sem_termos.iloc[:, 0], errors='coerce').notna()]
 
-        # Garante que a coluna 'CPF/CNPJ' seja tratada como string
+        # Garante que a coluna 'CPF/CNPJ' seja tratada como string sem espaços extras
         if 'CPF/CNPJ' in df_filtrado.columns:
             df_filtrado['CPF/CNPJ'] = df_filtrado['CPF/CNPJ'].astype(str).str.strip()
 
-            # Adiciona um zero à esquerda em CPF/CNPJ com 10 caracteres
-            df_filtrado['CPF/CNPJ'] = df_filtrado['CPF/CNPJ'].apply(lambda x: '0' + x if len(x) == 10 and x.isdigit() else x)
+            # Adiciona um zero à esquerda em CPF/CNPJ com exatamente 10 dígitos numéricos
+            df_filtrado['CPF/CNPJ'] = df_filtrado['CPF/CNPJ'].apply(
+                lambda x: '0' + x if x.isdigit() and len(x) == 10 else x
+            )
 
         return df_filtrado
 
@@ -60,7 +65,7 @@ def main():
 
             if df_filtrado is not None:
                 st.write("DataFrame filtrado:")
-                st.dataframe(df_filtrado.astype(str)) # Garante a conversão para string antes de exibir
+                st.dataframe(df_filtrado.astype(str))  # Garante exibição correta
 
                 # Opção para baixar o arquivo filtrado
                 output = io.BytesIO()
@@ -73,7 +78,7 @@ def main():
                     file_name="pagamentos_filtrados.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
-    elif usuario e senha:
+    elif usuario and senha:
         st.error("Usuário ou senha incorretos.")
 
 if __name__ == "__main__":
