@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import io
+import openpyxl
 
 def filtrar_pagamentos_numericos_e_termos(arquivo_excel, termos_excluir):
     """
@@ -9,8 +10,12 @@ def filtrar_pagamentos_numericos_e_termos(arquivo_excel, termos_excluir):
     Adiciona um zero à esquerda em CPF/CNPJ com 10 caracteres.
     """
     try:
-        # Carrega a planilha Excel a partir do BytesIO
-        df = pd.read_excel(arquivo_excel, engine='xlrd')
+        # Carrega a planilha Excel a partir do BytesIO usando openpyxl
+        wb = openpyxl.load_workbook(arquivo_excel)
+        sheet = wb.active
+        data = sheet.values
+        columns = next(data)
+        df = pd.DataFrame(data, columns=columns)
 
         # Converte a primeira coluna para string (para lidar com valores mistos)
         df.iloc[:, 0] = df.iloc[:, 0].astype(str)
@@ -60,7 +65,7 @@ def main():
 
             if df_filtrado is not None:
                 st.write("DataFrame filtrado:")
-                st.dataframe(df_filtrado)
+                st.dataframe(df_filtrado.astype(str)) # Garante a conversão para string antes de exibir
 
                 # Opção para baixar o arquivo filtrado
                 output = io.BytesIO()
