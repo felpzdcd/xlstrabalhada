@@ -6,13 +6,7 @@ def filtrar_pagamentos_numericos_e_termos(arquivo_excel, termos_excluir):
     """
     Filtra um arquivo Excel mantendo apenas as linhas onde a primeira célula é numérica
     e exclui linhas com termos específicos na primeira coluna.
-
-    Args:
-        arquivo_excel (BytesIO): O arquivo Excel carregado pelo Streamlit.
-        termos_excluir (list): Lista de termos a serem excluídos da primeira coluna.
-
-    Returns:
-        pd.DataFrame: DataFrame filtrado.
+    Adiciona um zero à esquerda em CPF/CNPJ com 10 caracteres.
     """
     try:
         # Carrega a planilha Excel a partir do BytesIO
@@ -27,6 +21,10 @@ def filtrar_pagamentos_numericos_e_termos(arquivo_excel, termos_excluir):
 
         # Filtra as linhas onde a primeira célula é numérica
         df_filtrado = df_sem_termos[pd.to_numeric(df_sem_termos.iloc[:, 0], errors='coerce').notna()]
+
+        # Adiciona um zero à esquerda em CPF/CNPJ com 10 caracteres
+        if 'CPF/CNPJ' in df_filtrado.columns:
+            df_filtrado['CPF/CNPJ'] = df_filtrado['CPF/CNPJ'].astype(str).apply(lambda x: '0' + x if len(x) == 10 else x)
 
         return df_filtrado
 
