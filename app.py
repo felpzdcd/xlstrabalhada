@@ -26,8 +26,16 @@ def filtrar_pagamentos_numericos_e_termos(arquivo_excel, termos_excluir):
         if 'CPF/CNPJ' in df_filtrado.columns:
             df_filtrado['CPF/CNPJ'] = df_filtrado['CPF/CNPJ'].astype(str)
 
+            # Depuração: Imprime o DataFrame antes da função lambda
+            print("DataFrame antes da função lambda:")
+            print(df_filtrado['CPF/CNPJ'])
+
             # Adiciona um zero à esquerda em CPF/CNPJ com 10 caracteres
             df_filtrado['CPF/CNPJ'] = df_filtrado['CPF/CNPJ'].apply(lambda x: '0' + x if len(x) == 10 else x)
+
+            # Depuração: Imprime o DataFrame depois da função lambda
+            print("DataFrame depois da função lambda:")
+            print(df_filtrado['CPF/CNPJ'])
 
         return df_filtrado
 
