@@ -2,15 +2,15 @@ import streamlit as st
 import pandas as pd
 import io
 
-def filtrar_pagamentos_numericos_e_termos(arquivo_csv, termos_excluir):
+def filtrar_pagamentos_numericos_e_termos(arquivo_excel, termos_excluir):
     """
-    Filtra um arquivo CSV mantendo apenas as linhas onde a primeira célula é numérica
+    Filtra um arquivo Excel mantendo apenas as linhas onde a primeira célula é numérica
     e exclui linhas com termos específicos na primeira coluna.
     Adiciona um zero à esquerda em CPF/CNPJ com 10 caracteres.
     """
     try:
-        # Carrega o arquivo CSV a partir do BytesIO
-        df = pd.read_csv(arquivo_csv)
+        # Carrega a planilha Excel a partir do BytesIO
+        df = pd.read_excel(arquivo_excel)
 
         # Converte a primeira coluna para string (para lidar com valores mistos)
         df.iloc[:, 0] = df.iloc[:, 0].astype(str)
@@ -43,9 +43,9 @@ def main():
     senha = st.text_input("Senha", type="password")
 
     if usuario == "tesouraria" and senha == "alcif0@":
-        arquivo_csv = st.file_uploader("Carregue o arquivo CSV", type=["csv"])
+        arquivo_excel = st.file_uploader("Carregue o arquivo Excel", type=["xls", "xlsx"])
 
-        if arquivo_csv is not None:
+        if arquivo_excel is not None:
             termos_excluir = [
                 'ITABUNA', 'Vencimento', 'Qtde de Reg.:', 'Total da Unidade', 'ALCIR - ITABUNA',
                 'ADMINISTRATIVO', 'BELO HORIZONTE', 'ALAGOAS', 'ESPIRITO SANTO', 'SAO PAULO - CAPITAL',
@@ -56,7 +56,7 @@ def main():
                 'SUB - 3RN INTERME. DE NEGOCIOS LTDA - C6', 'SUB - SPERANDIO SOLUCOES LTDA - FACTA'
             ]
 
-            df_filtrado = filtrar_pagamentos_numericos_e_termos(arquivo_csv, termos_excluir)
+            df_filtrado = filtrar_pagamentos_numericos_e_termos(arquivo_excel, termos_excluir)
 
             if df_filtrado is not None:
                 st.write("DataFrame filtrado:")
